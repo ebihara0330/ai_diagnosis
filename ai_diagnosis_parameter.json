@@ -1,0 +1,35 @@
+{
+  "threshold": 0.0054,
+  "ai_min_output_value": 0.0001,
+  "ai_max_output_value": 0.9,
+  "input_models": [
+    {
+      "name": "mbert",
+      "auroc": "1.1",
+      "directory": "models/yamaguchi_bert-base-multilingual-cased_v3_english_hojoren_undersampled-4000",
+      "ensemble_ratio": 80,
+      "supported_languages": [
+        "ja",
+        "en",
+        "fa"
+      ]
+    },
+    {
+      "name": "setfit",
+      "auroc": "1.9",
+      "directory": "models/ono_paraphrase-multilingual-mpnet-base-v2_v5_setfit-cabinetonly-undersampling4000",
+      "ensemble_ratio": 1,
+      "supported_languages": [
+        "ja",
+        "en"
+      ]
+    },
+    {
+        "name": "xlmroberta",
+        "auroc": "2.0",
+        "directory": "models/ono_xlm-roberta-base_v5_partial-legalinfor_jap-undersampling4000_ep3_lr1e-5",
+        "ensemble_ratio": 2,
+        "supported_languages": ["ja", "en", "bn"]
+    }
+  ]
+}
