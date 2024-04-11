@@ -1,14 +1,3 @@
-"""
-overview:
-・入力情報を法規情報として扱う必要があるかをAIが診断する
-
-contents:
-・法規原文/和訳、言語情報を元にAI診断を実行する
-  - 原文の言語がAI非対応の場合、診断の対象外とする
-  - AIが対応可能な場合、原文を元に法規情報の取り扱い要否を推論する
-  - 推論後にshapで結果の詳細を取得して、結果および結果の詳細を返却する
-"""
-
 import re 
 import torch
 import json
@@ -41,11 +30,6 @@ class DiagnosticResult:
         """
         Initialize the DiagnosticResult class.
         Args:
-        ai_result：AI判断結果
-        ai_output_value：AI出力値
-        ai_confidence：AI確信度
-        keyword_textual：キーワードハイライト(原文)
-        keyword_ja_translation：キーワードハイライト(和訳)
         """
         self.ai_result = ai_result
         self.ai_output_value = ai_output_value
@@ -128,12 +112,6 @@ def inference(params, textual):
     """
     推論処理
     
-    Args:
-    params：診断で利用するAIモデル情報
-    textual：法規原文
-    
-    Returns:
-    アンサンブル後のAI出力値
     """
 
     # アンサンブル（加重平均）したAIの推論結果
@@ -177,12 +155,6 @@ def get_ai_result(params, ai_output_value) :
     """
     AI判断結果取得
     
-    Args:
-    params：診断で利用するAIモデル情報
-    ai_output_value：アンサンブル後のAI出力値
-    
-    Returns:
-    AI判断結果
     """
     return "〇" if ai_output_value > params.threshold else "×"
 
@@ -191,33 +163,18 @@ def get_ai_confidence(params, ai_output_value):
     """
     AI確信度取得
     
-    Args:
-    params：診断で利用するAIモデル情報
-    ai_output_value：アンサンブル後のAI出力値
-    
-    Returns:
-    AI確信度
     """
 
     # AI出力値が閾値よりも大きい場合
     if ai_output_value > params.threshold:
-        # （AI出力値（最大）- 閾値）/ 9 でプラスの確信度10%あたりの値を算出する
         positive_confidence_value = (params.ai_max_output_value - params.threshold) / 9
-        # 閾値とAI出力値の差分 / プラスの確信度10%あたりの値（少数点切り上げ） * 10で確信度（10%～90）を算出する
-        # なお、プラスの場合は閾値と比較して、より大きいAI出力値の確信度が高くなる
-        # ※閾値に近い場合は10%、最大出力値に近い場合は90%のイメージ
         ai_confidence = math.ceil((ai_output_value - params.threshold) / positive_confidence_value) * 10
 
     # AI出力値が閾値未満の場合
     else:
-        # （閾値 - AI出力値（最小））/ 9 でマイナスの確信度10%あたりの値を算出する
         negative_confidence_value = (params.threshold - params.ai_min_output_value) / 9
-        # 閾値とAI出力値の差分 / マイナスの確信度10%あたりの値（少数点切り上げ） * 10で確信度（10%～90）を算出する
-        # なお、マイナスの場合は閾値と比較して、より小さいAI出力値の確信度が高くなる
-        # ※閾値に近い場合は10%、最小出力値に近い場合は90%のイメージ
         ai_confidence = math.ceil((params.threshold - ai_output_value) / negative_confidence_value) * 10
 
-    # 計算結果が0の場合（AI出力値=閾値）は10におきかえる、90より大きい場合（AI出力値<最小値 or 最大<AI出力値）は90に置き換える
     if ai_confidence == 0:
         ai_confidence = 10
     elif ai_confidence > 90:
@@ -230,12 +187,6 @@ def get_keyword(params, regulatory_text) :
     """
     キーワードハイライト取得
     
-    Args:
-    params：診断で利用するAIモデル情報
-    regulatory_text：法規テキスト（原文 or 和訳）
-    
-    Returns:
-    法規テキストのキーワードにハイライトを設定したhtmlデータ
     """
 
     # 入力の中で一番aurocが高いモデル（複数ある場合は先に取得したモデル）を取得する
